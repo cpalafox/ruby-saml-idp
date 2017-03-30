@@ -8,13 +8,14 @@ The ruby SAML Identity Provider library is for implementing the server side of S
 
 Setting up a "real" IdP is such an undertaking I didn't care for such an achievement. I wanted something very simple that just works without having to install extra components and setup extra infrastructure. In it's current form it's basic. This is because currently I use it for manual and end-to-end testing purposes of the Service Provider side only. It is reversed engineered from real-world SAML Responses sent by ADFS systems.
 
+> This gem adds additional parameter supoport to pass from provider to consumer. In next versions I am planning to add HTTP Redirect support besides POST.
 
 Installation and Usage
 ----------------------
 
 Add this to your Gemfile:
 
-    gem 'ruby-saml-idp'
+    gem 'ruby-saml-idp2'
 
 ### Not using rails?
 
@@ -22,7 +23,7 @@ Include `SamlIdp::Controller` and see the examples that use rails. It should be 
 
 Basically you call `decode_SAMLRequest(params[:SAMLRequest])` on an incoming request and then use the value `saml_acs_url` to determine the source for which you need to authenticate a user. How you authenticate a user is entirely up to you.
 
-Once a user has successfully authenticated on your system send the Service Provider a SAMLReponse by posting to `saml_acs_url` the parameter `SAMLResponse` with the return value from a call to `encode_SAMLResponse(user_email)`.
+Once a user has successfully authenticated on your system send the Service Provider a SAMLReponse by posting to `saml_acs_url` the parameter `SAMLResponse` with the return value from a call to `encode_SAMLResponse(user_email, options, additional_parameters)`.
 
 ### Using rails?
 
@@ -70,7 +71,7 @@ class SamlIdpController < SamlIdp::IdpController
   end
 
   def idp_make_saml_response(user)
-    encode_SAMLResponse("you@example.com")
+    encode_SAMLResponse("you@example.com", {}, {})
   end
 
 end
@@ -98,7 +99,6 @@ Author
 ----------
 
 Lawrence Pit, lawrence.pit@gmail.com, [lawrencepit.com](http://lawrencepit.com), [@lawrencepit](http://twitter.com/lawrencepit)
-
 
 Copyright
 -----------
