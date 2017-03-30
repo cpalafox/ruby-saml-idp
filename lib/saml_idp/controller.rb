@@ -58,12 +58,26 @@ module SamlIdp
         @saml_acs_url = @saml_request[/AssertionConsumerServiceURL=['"](.+?)['"]/, 1]
       end
 
-      def encode_SAMLResponse(nameID, opts = {})
+
+
+
+      def encode_SAMLResponse(nameID, opts = {}, params = {})
         now = Time.now.utc
         response_id, reference_id = SecureRandom.uuid, SecureRandom.uuid
         audience_uri = opts[:audience_uri] || saml_acs_url[/^(.*?\/\/.*?\/)/, 1]
         issuer_uri = opts[:issuer_uri] || (defined?(request) && request.url) || "http://example.com"
         attributes_statement = attributes(opts[:attributes_provider], nameID)
+
+        if params
+          # lets remove last tag for now. we will append it. I do not want to work with XML directly but with hack.
+		      attributes_statement.sub! '</saml:AttributeStatement>', ''
+          params.each do |key, value|
+			      attributes_statement.sub! attributes_statement, attributes_statement + add_attribute(key, value)
+          end
+        end
+        
+		    # now re-add our last close tag again for valid XML schema
+        attributes_statement += '</saml:AttributeStatement>'        
 
         assertion = %[<saml:Assertion xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" ID="_#{reference_id}" IssueInstant="#{now.iso8601}" Version="2.0"><saml:Issuer Format="urn:oasis:names:SAML:2.0:nameid-format:entity">#{issuer_uri}</saml:Issuer><saml:Subject><saml:NameID Format="urn:oasis:names:tc:SAML:1.1:nameid-format:emailAddress">#{nameID}</saml:NameID><saml:SubjectConfirmation Method="urn:oasis:names:tc:SAML:2.0:cm:bearer"><saml:SubjectConfirmationData InResponseTo="#{@saml_request_id}" NotOnOrAfter="#{(now+3*60).iso8601}" Recipient="#{@saml_acs_url}"></saml:SubjectConfirmationData></saml:SubjectConfirmation></saml:Subject><saml:Conditions NotBefore="#{(now-5).iso8601}" NotOnOrAfter="#{(now+60*60).iso8601}"><saml:AudienceRestriction><saml:Audience>#{audience_uri}</saml:Audience></saml:AudienceRestriction></saml:Conditions>#{attributes_statement}<saml:AuthnStatement AuthnInstant="#{now.iso8601}" SessionIndex="_#{reference_id}"><saml:AuthnContext><saml:AuthnContextClassRef>urn:federation:authentication:windows</saml:AuthnContextClassRef></saml:AuthnContext></saml:AuthnStatement></saml:Assertion>]
 
@@ -78,7 +92,7 @@ module SamlIdp
         assertion_and_signature = assertion.sub(/Issuer\>\<saml:Subject/, "Issuer>#{signature}<saml:Subject")
 
         xml = %[<samlp:Response ID="_#{response_id}" Version="2.0" IssueInstant="#{now.iso8601}" Destination="#{@saml_acs_url}" Consent="urn:oasis:names:tc:SAML:2.0:consent:unspecified" InResponseTo="#{@saml_request_id}" xmlns:samlp="urn:oasis:names:tc:SAML:2.0:protocol"><saml:Issuer xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion">#{issuer_uri}</saml:Issuer><samlp:Status><samlp:StatusCode Value="urn:oasis:names:tc:SAML:2.0:status:Success" /></samlp:Status>#{assertion_and_signature}</samlp:Response>]
-
+		
         Base64.encode64(xml)
       end
 
@@ -92,5 +106,10 @@ module SamlIdp
       def attributes(provider, nameID)
         provider ? provider : %[<saml:AttributeStatement><saml:Attribute Name="http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress"><saml:AttributeValue>#{nameID}</saml:AttributeValue></saml:Attribute></saml:AttributeStatement>]
       end
+
+      def add_attribute(key, value)
+        %[<saml:Attribute Name="#{key}"><saml:AttributeValue>#{value}</saml:AttributeValue></saml:Attribute>]
+      end
+
   end
 end
