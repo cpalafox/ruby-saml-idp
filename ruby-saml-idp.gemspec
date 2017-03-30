@@ -25,8 +25,8 @@ Gem::Specification.new do |s|
   s.add_development_dependency "rake"
   s.add_development_dependency("nokogiri", "~> 1.6.8")
   s.add_development_dependency("rspec", "~> 3.0")
-  s.add_development_dependency("ruby-saml", "~> 0.8")
-  s.add_development_dependency("rails", "~> 3.2")
+  s.add_development_dependency("ruby-saml", "~> 1.0")
+  s.add_development_dependency("rails", "~> 5.0")
   s.add_development_dependency("capybara", "~> 2.4.1")
 end
 
