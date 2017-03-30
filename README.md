@@ -15,7 +15,7 @@ Installation and Usage
 
 Add this to your Gemfile:
 
-    gem 'ruby-saml-idp2'
+    gem 'ruby-saml-idp', :github => 'dev-develop/ruby-saml-idp', :branch => 'master'
 
 ### Not using rails?
 
