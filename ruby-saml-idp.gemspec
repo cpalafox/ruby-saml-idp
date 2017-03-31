@@ -5,7 +5,6 @@ require "saml_idp/version"
 Gem::Specification.new do |s|
   s.name = %q{ruby-saml-idp}
   s.version = SamlIdp::VERSION
-  s.platform = Gem::Platform::RUBY
   s.authors = ["Lawrence Pit"]
   s.email = %q{lawrence.pit@gmail.com}
   s.homepage = %q{http://github.com/dev-develop/ruby-saml-idp}
